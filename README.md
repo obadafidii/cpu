@@ -14,7 +14,7 @@ Right now, I just adding resources I found online to build this emulator. Right 
 
 ## Resources
 1. [Emulating a CPU in C++ by Dave Poo](https://www.youtube.com/watch?v=qJgsuQoy9bc)
-2. [32-bit CPU in C++](https://rohan-sharma.de/blog/32-bit-cpu/)
+2. [32-bit CPU in C++](https://rohan-sharma.de/blog/32-bit-cpu/) -> David start here.
 3. [Writing your first emulator Part I](https://gecko05.github.io/2022/10/22/first-emulator-part1.html)
 4. [Write your own Virtual CPU (in C++ Code)](https://megalomaniacbore.blogspot.com/2012/05/write-your-own-virtual-cpu-in-c-code.html)
 
