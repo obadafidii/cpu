@@ -26,3 +26,6 @@ Right now, I just adding resources I found online to build this emulator. Right 
 ## People notes
 1. [Kareem's post](https://www.linkedin.com/posts/kareem-abo-gazala-b64974316_riscabrv-operatingsystems-systemsprogramming-share-7381363006196232192-R-ku/)
 2. [Kareem's Risc-v simulator](https://github.com/kareemabogazala/riscv-simulator)
+
+## Online Emulator
+1. [cpu labs](https://cpu-emulator-iota.vercel.app/)
