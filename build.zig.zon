@@ -1,0 +1,7 @@
+.{
+    .name = .cpu,
+    .version = "0.0.1",
+    .minimum_zig_version = "0.16.0",
+    .paths = .{""},
+    .fingerprint = 0xba80502e2fbc5c4d,
+}
