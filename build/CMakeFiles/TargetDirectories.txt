@@ -1,0 +1,3 @@
+/Users/king/Documents/personal/cpu/build/CMakeFiles/cpu.dir
+/Users/king/Documents/personal/cpu/build/CMakeFiles/edit_cache.dir
+/Users/king/Documents/personal/cpu/build/CMakeFiles/rebuild_cache.dir
