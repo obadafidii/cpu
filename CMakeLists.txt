@@ -8,24 +8,52 @@ project(
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_executable(
-    cpu
-    src/main.cpp
+include(FetchContent)
+
+FetchContent_Declare(
+    googletest
+    URL https://github.com/google/googletest/archive/refs/tags/v1.17.0.zip
+    DOWNLOAD_EXTRACT_TIMESTAMP ON
+)
+
+FetchContent_MakeAvailable(googletest)
+
+add_library(
+    cpu_lib
     src/cpu.cpp
 )
 
 target_include_directories(
-    cpu
-    PRIVATE
+    cpu_lib
+    PUBLIC
     include
 )
 
-target_compile_options(
+add_executable(
+    cpu
+    src/main.cpp
+)
+
+target_link_libraries(
     cpu
     PRIVATE
-    -Wall
-    -Wextra
-    -Wpedantic
+    cpu_lib
 )
+
+enable_testing()
+
+add_executable(cpu_tests
+    tests/cpu_test.cpp
+)
+
+include(GoogleTest)
+
+target_link_libraries(
+    cpu_tests
+    PRIVATE
+    cpu_lib
+    GTest::gtest_main
+)
+
+gtest_discover_tests(cpu_tests)
