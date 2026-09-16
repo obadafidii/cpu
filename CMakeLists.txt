@@ -33,6 +33,7 @@ target_include_directories(
 add_executable(
     cpu
     src/main.cpp
+    include/emulator/cpu.hpp
 )
 
 target_link_libraries(
