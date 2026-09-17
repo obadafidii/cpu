@@ -5,4 +5,8 @@
 #ifndef CPU_ALU_H
 #define CPU_ALU_H
 
-#endif //CPU_ALU_H
+class ArithemeticLogicUnit {
+  ArithemeticLogicUnit() = default;
+};
+
+#endif // CPU_ALU_H

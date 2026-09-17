@@ -23,8 +23,8 @@ FetchContent_MakeAvailable(googletest)
 add_library(
     cpu_lib
     src/cpu.cpp
-        include/emulator/registers.h
         include/emulator/alu.h
+        include/emulator/instruction.h
 )
 
 target_include_directories(
@@ -38,8 +38,8 @@ add_executable(
     src/
         include/emulator/cpu.h
         include/emulator/control_unit.h
-        include/emulator/registers.h
         include/emulator/alu.h
+        include/emulator/instruction.h
 )
 
 target_link_libraries(
@@ -52,8 +52,8 @@ enable_testing()
 
 add_executable(cpu_tests
     tests/cpu_test.cpp
-        include/emulator/registers.h
         include/emulator/alu.h
+        include/emulator/instruction.h
 )
 
 include(GoogleTest)
