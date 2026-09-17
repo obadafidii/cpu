@@ -23,6 +23,9 @@ Right now, I just adding resources I found online to build this emulator. Right 
 > Start Rohan's article and build alongside it, but in Zig rather than C++. When you reach instruction execution, start watching Dave Poo—not to copy the 6502, but > to study his implementation/testing methodology. After your basic emulator executes programs correctly, read Gecko and compare its cycle-oriented model against > > your simplified fetch/decode/execute model.
 
 
+## Courses I took
+1. [Prof Onur Mutlu's Digital design course: start from here to *](https://www.youtube.com/live/fOl5MLoUzco?si=FS_GGDM2-3RuTIyQ)
+
 ## People notes
 1. [Kareem's post](https://www.linkedin.com/posts/kareem-abo-gazala-b64974316_riscabrv-operatingsystems-systemsprogramming-share-7381363006196232192-R-ku/)
 2. [Kareem's Risc-v simulator](https://github.com/kareemabogazala/riscv-simulator)
