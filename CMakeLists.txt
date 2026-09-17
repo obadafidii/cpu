@@ -8,6 +8,7 @@ project(
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include(FetchContent)
 
@@ -22,6 +23,8 @@ FetchContent_MakeAvailable(googletest)
 add_library(
     cpu_lib
     src/cpu.cpp
+        include/emulator/registers.h
+        include/emulator/alu.h
 )
 
 target_include_directories(
@@ -32,8 +35,11 @@ target_include_directories(
 
 add_executable(
     cpu
-    src/main.cpp
-    include/emulator/cpu.hpp
+    src/
+        include/emulator/cpu.h
+        include/emulator/control_unit.h
+        include/emulator/registers.h
+        include/emulator/alu.h
 )
 
 target_link_libraries(
@@ -46,6 +52,8 @@ enable_testing()
 
 add_executable(cpu_tests
     tests/cpu_test.cpp
+        include/emulator/registers.h
+        include/emulator/alu.h
 )
 
 include(GoogleTest)
@@ -58,3 +66,13 @@ target_link_libraries(
 )
 
 gtest_discover_tests(cpu_tests)
+
+target_compile_options(
+    cpu_lib
+    PRIVATE
+    -Wall
+    -Wextra
+    -Wpedantic
+    -Wconversion
+    -Wshadow
+)
