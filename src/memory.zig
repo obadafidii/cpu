@@ -58,17 +58,17 @@ pub fn Memory(comptime N: i32) type {
             return self.space.len;
         }
 
-        pub fn read_8_bytes(self: *Self, address: u16) u8 {
+        pub fn read_8_bytes(self: *const Self, address: u16) u8 {
             _ = self;
             _ = address;
             return "";
         }
-        pub fn read_16_bytes(self: *Self, address: u16) u16 {
+        pub fn read_16_bytes(self: *const Self, address: u16) u16 {
             _ = self;
             _ = address;
             return "";
         }
-        pub fn read_32_bytes(self: *Self, address: u32) u32 {
+        pub fn read_32_bytes(self: *const Self, address: u32) u32 {
             _ = self;
             _ = address;
             return 1;
