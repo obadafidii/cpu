@@ -88,7 +88,7 @@ const CPU = struct {
                 var move_instruction = Instruction.init(.Mov);
                 move_instruction.register1 = try self._safely_read_register_at_offset(4);
                 move_instruction.immediate = try self._safely_read_register_at_offset(8);
-                move_instruction.length = 8;
+                move_instruction.length = 12;
                 return move_instruction;
             },
             .Hlt => { // HLT
@@ -174,20 +174,25 @@ test "decode: returns the instruction related to the read bytes" {
     // 0x30 -> Add
     const add = try cpu.decode(0x30);
     try std.testing.expectEqual(add.opcode, Opcode.Add);
+    try std.testing.expectEqual(add.length, 12);
 
     // 0x31 -> Sub
     const sub = try cpu.decode(0x31);
     try std.testing.expectEqual(sub.opcode, Opcode.Sub);
+    try std.testing.expectEqual(sub.length, 12);
 
     // 0x10 -> load
     const load = try cpu.decode(0x10);
     try std.testing.expectEqual(load.opcode, Opcode.Load);
+    try std.testing.expectEqual(load.length, 12);
 
     // 0x11 -> Mov
     const mov = try cpu.decode(0x11);
     try std.testing.expectEqual(mov.opcode, Opcode.Mov);
+    try std.testing.expectEqual(mov.length, 12);
 
     // 0x01 -> Hlt
     const hlt = try cpu.decode(0x01);
     try std.testing.expectEqual(hlt.opcode, Opcode.Hlt);
+    try std.testing.expectEqual(hlt.length, 4);
 }
