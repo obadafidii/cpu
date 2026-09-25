@@ -49,7 +49,7 @@ const CPU = struct {
             const binary: u32 = self.fetch();
             const decoded_instruction: Instruction = try self.decode(binary);
             try self.execute(decoded_instruction);
-            self._move_to_next_instruction();
+            self._move_to_next_instruction(decoded_instruction);
         }
     }
 
