@@ -61,14 +61,17 @@ pub fn Memory(comptime N: i32) type {
         pub fn read_8_bytes(self: *Self, address: u16) u8 {
             _ = self;
             _ = address;
+            return "";
         }
         pub fn read_16_bytes(self: *Self, address: u16) u16 {
             _ = self;
             _ = address;
+            return "";
         }
         pub fn read_32_bytes(self: *Self, address: u32) u32 {
             _ = self;
             _ = address;
+            return 1;
         }
 
         pub fn write_8_bytes(self: *Self, address: u16, data: u8) void {
