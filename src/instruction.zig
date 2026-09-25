@@ -22,11 +22,11 @@ pub const Instruction = struct {
     // destination register
     // ADD r1, r2 -> add value in
     // r2 to r1 and store in r2
-    register1: u8,
+    register1: u32,
 
     // source register
     // ADD r1, r2 -> r2 is source
-    register2: u8,
+    register2: u32,
 
     // used for jumps and memory operations
     addresses: u16,
@@ -34,8 +34,21 @@ pub const Instruction = struct {
     // for immediate values
     immediate: u32,
 
-    // size of the instruction
+    // size of the instruction, it is used to move
+    // to the beginning of the next instruction using
+    // the current's instruction length.
     length: u8,
 
     const Self = @This();
+
+    pub fn init(opcode: Opcode) Instruction {
+        return .{
+            .register1 = 0,
+            .register2 = 0,
+            .addresses = 0,
+            .immediate = 0,
+            .length = 0,
+            .opcode = opcode,
+        };
+    }
 };
