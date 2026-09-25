@@ -11,7 +11,7 @@ const _64KiB_Memory = memory.Memory(65535); // 64 kibi byte memory = 64 * 1024 *
 
 pub const CpuError = error{ InvalidInstruction, InvalidRegister, InvalidMemoryRead };
 
-const CPU = struct {
+pub const Cpu = struct {
     const Self = @This();
 
     program_counter: u32,
@@ -26,7 +26,7 @@ const CPU = struct {
     const FLAG_C: i8 = 1 << 1;
     const FLAG_N: i8 = 1 << 2;
 
-    fn init() !CPU {
+    pub fn init() !Cpu {
         return .{
             .program_counter = 0,
             .memory = try _64KiB_Memory.init(),
@@ -45,8 +45,8 @@ const CPU = struct {
     // TODO: I will come back to this and think of implementing pipelining
     // and branching prediction. Not sure yet.
     pub fn start(self: *Self) !void {
-        while (!self._is_halted()) {
-            const binary: u32 = self.fetch();
+        while (self.is_halted != 1) {
+            const binary: u8 = @intCast(self.fetch());
             const decoded_instruction: Instruction = try self.decode(binary);
             try self.execute(decoded_instruction);
             self._move_to_next_instruction(decoded_instruction);
@@ -101,15 +101,13 @@ const CPU = struct {
     }
 
     fn execute(self: *Self, instruction: Instruction) !void {
-        switch (instruction.opcode) {
+        return switch (instruction.opcode) {
             .Load => {
                 // load immediate to register1
                 self.registers[instruction.register1] = instruction.immediate;
-                return;
             },
             .Mov => {
                 self.registers[instruction.register1] = self.registers[instruction.register2];
-                return;
             },
             .Add => {
                 // 1. add r2 to r1
@@ -119,7 +117,6 @@ const CPU = struct {
 
                 // 2. store in r1
                 self.registers[instruction.register1] = sum;
-                return;
             },
             .Sub => {
                 // 1. add r2 to r1
@@ -129,13 +126,12 @@ const CPU = struct {
 
                 // 2. store in r1
                 self.registers[instruction.register1] = difference;
-                return;
             },
             .Hlt => {
-                self.is_halted = true;
-                return;
+                self.is_halted = 1;
             },
-        }
+            _ => CpuError.InvalidInstruction,
+        };
     }
 
     // helper method to make sure we don't read outside of memory boundary.
@@ -150,10 +146,6 @@ const CPU = struct {
         return reg;
     }
 
-    fn _is_halted(self: *Self) bool {
-        return self.is_halted;
-    }
-
     fn _move_to_next_instruction(self: *Self, instruction: Instruction) void {
         self.program_counter += instruction.length;
     }
@@ -161,15 +153,15 @@ const CPU = struct {
 
 // End to end test of CPU
 // Fetch -> Decode -> Execute
-test CPU {}
+test Cpu {}
 
 test "decode: invalid opcode returns invalid instruction" {
-    var cpu = try CPU.init();
+    var cpu = try Cpu.init();
     try std.testing.expectError(CpuError.InvalidInstruction, cpu.decode(0x6));
 }
 
 test "decode: returns the instruction related to the read bytes" {
-    const cpu = try CPU.init();
+    const cpu = try Cpu.init();
 
     // 0x30 -> Add
     const add = try cpu.decode(0x30);
