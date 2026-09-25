@@ -72,22 +72,22 @@ const CPU = struct {
                 //
                 // So from PC the way I can access R2 is to add 8bytes and 4bytes for R1
                 var instruction: Instruction = Instruction.init(op);
-                instruction.register1 = try self._read_register_safely_at(4);
-                instruction.register2 = try self._read_register_safely_at(8);
+                instruction.register1 = try self._safely_read_register_at_offset(4);
+                instruction.register2 = try self._safely_read_register_at_offset(8);
                 instruction.length = 12;
                 return instruction;
             },
             .Load => { // LD R1, #immediate
                 var load_instruction = Instruction.init(.Load);
-                load_instruction.register1 = try self._read_register_safely_at(4); // 4 bytes
-                load_instruction.immediate = try self._read_register_safely_at(8); // 8 bytes
+                load_instruction.register1 = try self._safely_read_register_at_offset(4); // 4 bytes
+                load_instruction.immediate = try self._safely_read_register_at_offset(8); // 8 bytes
                 load_instruction.length = 12;
                 return load_instruction;
             },
             .Mov => { // MOV R1, R2
                 var move_instruction = Instruction.init(.Mov);
-                move_instruction.register1 = try self._read_register_safely_at(4);
-                move_instruction.immediate = try self._read_register_safely_at(8);
+                move_instruction.register1 = try self._safely_read_register_at_offset(4);
+                move_instruction.immediate = try self._safely_read_register_at_offset(8);
                 move_instruction.length = 8;
                 return move_instruction;
             },
@@ -139,7 +139,7 @@ const CPU = struct {
     }
 
     // helper method to make sure we don't read outside of memory boundary.
-    fn _read_register_safely_at(self: *const Self, offset: u16) CpuError!u32 {
+    fn _safely_read_register_at_offset(self: *const Self, offset: u16) CpuError!u32 {
         const reg = self.memory.read_32_bytes(self.program_counter + offset);
 
         // 15 is the number of registers my cpu has.
