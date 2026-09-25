@@ -69,7 +69,7 @@ const CPU = struct {
     // +----------+--------+----------+------------------------------------------------------+
     //
     // This guide is what will help in decoding
-    pub fn decode(self: *Self, hex: u8) CpuError!Instruction {
+    pub fn decode(self: *const Self, hex: u8) CpuError!Instruction {
         const opcode = hexToOpcode(hex);
 
         return switch (opcode) {
@@ -117,7 +117,7 @@ const CPU = struct {
     }
 
     // helper method to make sure we don't read outside of memory boundary.
-    fn _read_register_safely_at(self: *Self, offset: u16) CpuError!u32 {
+    fn _read_register_safely_at(self: *const Self, offset: u16) CpuError!u32 {
         const reg = self.memory.read_32_bytes(self.program_counter + offset);
 
         // 15 is the number of registers my cpu has.
@@ -137,7 +137,31 @@ const CPU = struct {
     }
 };
 
-test "CPU[decode]: invalid opcode returns invalid instruction" {
+test "decode: invalid opcode returns invalid instruction" {
     var cpu = try CPU.init();
     try std.testing.expectError(CpuError.InvalidInstruction, cpu.decode(0x6));
+}
+
+test "decode: returns the instruction related to the read bytes" {
+    const cpu = try CPU.init();
+
+    // 0x30 -> Add
+    const add = try cpu.decode(0x30);
+    try std.testing.expectEqual(add.opcode, Opcode.Add);
+
+    // 0x31 -> Sub
+    const sub = try cpu.decode(0x31);
+    try std.testing.expectEqual(sub.opcode, Opcode.Sub);
+
+    // 0x10 -> load
+    const load = try cpu.decode(0x10);
+    try std.testing.expectEqual(load.opcode, Opcode.Load);
+
+    // 0x11 -> Mov
+    const mov = try cpu.decode(0x11);
+    try std.testing.expectEqual(mov.opcode, Opcode.Mov);
+
+    // 0x01 -> Hlt
+    const hlt = try cpu.decode(0x01);
+    try std.testing.expectEqual(hlt.opcode, Opcode.Hlt);
 }
