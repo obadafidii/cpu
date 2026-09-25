@@ -154,8 +154,8 @@ const CPU = struct {
         return self.is_halted;
     }
 
-    fn _move_to_next_instruction(self: *Self) void {
-        self.program_counter += 1;
+    fn _move_to_next_instruction(self: *Self, instruction: Instruction) void {
+        self.program_counter += instruction.length;
     }
 };
 
