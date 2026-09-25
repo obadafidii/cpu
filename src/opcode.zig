@@ -1,13 +1,5 @@
 const Self = @This();
 
-pub const Opcode = union(enum) {
-    Add: struct {
-        R1: u8,
-        R2: u8,
-    },
-    Sub: struct { R1: u8, R2: u8 },
-};
-
 // The instruction set architecture supported by this emulator
 // +----------+--------+----------+------------------------------------------------------+
 // | MNEMONIC | OPCODE | OPERANDS | DESCRIPTION                                          |
@@ -20,10 +12,11 @@ pub const Opcode = union(enum) {
 // +----------+--------+----------+------------------------------------------------------+
 //
 // This guide is what will help in decoding
-pub const OpcodeBinary = enum(u8) {
-    Add = 0x30,
-    Sub = 0x31,
-    Load = 0x10,
-    Mov = 0x11,
-    HLT = 0x01,
-};
+//
+// Something I learnt is non-exhaustive switch using _, it allows you to be able to neatly handle
+// cases not captured in the enum during conversion like @enumFromInt()
+pub const Opcode = enum(u8) { Add = 0x30, Sub = 0x31, Load = 0x10, Mov = 0x11, Hlt = 0x01, _ };
+
+pub fn hexToOpcode(hex: u8) Opcode {
+    return @enumFromInt(hex);
+}
