@@ -57,18 +57,8 @@ const CPU = struct {
         return self.memory.read_32_bytes(self.program_counter);
     }
 
-    // The instruction set architecture supported by this emulator
-    // +----------+--------+----------+------------------------------------------------------+
-    // | MNEMONIC | OPCODE | OPERANDS | DESCRIPTION                                          |
-    // +----------+--------+----------+------------------------------------------------------+
-    // | LOAD     | 0x10   | R, imm   | Load 32-bit immediate value into register R.         |
-    // | MOV      | 0x11   | R1, R2   | Copy value from R2 into R1.                          |
-    // | ADD      | 0x30   | R1, R2   | Add R2 to R1 and store the result in R1.             |
-    // | SUB      | 0x31   | R1, R2   | Subtract R2 from R1 and store the result in R1.       |
-    // | HLT      | 0x01   | -        | Halt the CPU.                                        |
-    // +----------+--------+----------+------------------------------------------------------+
-    //
-    // This guide is what will help in decoding
+    // decode: takes the binary read from memory and 'parse' and detects
+    // which instruction is this using the opcode.
     pub fn decode(self: *const Self, hex: u8) CpuError!Instruction {
         const opcode = hexToOpcode(hex);
 
@@ -87,7 +77,7 @@ const CPU = struct {
                 instruction.length = 12;
                 return instruction;
             },
-            .Load => { // MOV R1, #immediate
+            .Load => { // LD R1, #immediate
                 var load_instruction = Instruction.init(.Load);
                 load_instruction.register1 = try self._read_register_safely_at(4); // 4 bytes
                 load_instruction.immediate = try self._read_register_safely_at(8); // 8 bytes
@@ -110,10 +100,42 @@ const CPU = struct {
         };
     }
 
-    fn execute(self: *Self, instr: Instruction) !void {
-        _ = self;
-        _ = instr;
-        return;
+    fn execute(self: *Self, instruction: Instruction) !void {
+        switch (instruction.opcode) {
+            .Load => {
+                // load immediate to register1
+                self.registers[instruction.register1] = instruction.immediate;
+                return;
+            },
+            .Mov => {
+                self.registers[instruction.register1] = self.registers[instruction.register2];
+                return;
+            },
+            .Add => {
+                // 1. add r2 to r1
+                const operand1 = self.registers[instruction.register1];
+                const operand2 = self.registers[instruction.register2];
+                const sum = operand1 + operand2;
+
+                // 2. store in r1
+                self.registers[instruction.register1] = sum;
+                return;
+            },
+            .Sub => {
+                // 1. add r2 to r1
+                const operand1 = self.registers[instruction.register1];
+                const operand2 = self.registers[instruction.register2];
+                const difference = operand1 - operand2;
+
+                // 2. store in r1
+                self.registers[instruction.register1] = difference;
+                return;
+            },
+            .Hlt => {
+                self.is_halted = true;
+                return;
+            },
+        }
     }
 
     // helper method to make sure we don't read outside of memory boundary.
@@ -136,6 +158,10 @@ const CPU = struct {
         self.program_counter += 1;
     }
 };
+
+// End to end test of CPU
+// Fetch -> Decode -> Execute
+test CPU {}
 
 test "decode: invalid opcode returns invalid instruction" {
     var cpu = try CPU.init();
