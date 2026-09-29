@@ -22,6 +22,7 @@ pub const Cpu = struct {
     registers: [16]u32,
     memory: _64KiB_Memory,
 
+    const MAX_REGISTERS_COUNT: i8 = 15;
     const FLAG_Z: i8 = 1 << 0;
     const FLAG_C: i8 = 1 << 1;
     const FLAG_N: i8 = 1 << 2;
@@ -96,12 +97,19 @@ pub const Cpu = struct {
                 halt_instr.length = 4; // the halt opcode
                 return halt_instr;
             },
+            .JMP, .JZ, .JNZ => |op| {
+                var jump_instrcution = Instruction.init(op);
+                jump_instrcution.length = 8;
+                return jump_instrcution;
+            },
             _ => CpuError.InvalidInstruction,
         };
     }
 
-    fn execute(self: *Self, instruction: Instruction) !void {
-        return switch (instruction.opcode) {
+    fn execute(self: *Self, instruction: Instruction) !bool {
+        var jump_occurred: bool = false;
+
+        switch (instruction.opcode) {
             .Load => {
                 // load immediate to register1
                 self.registers[instruction.register1] = instruction.immediate;
@@ -127,11 +135,33 @@ pub const Cpu = struct {
                 // 2. store in r1
                 self.registers[instruction.register1] = difference;
             },
+            .JMP => {
+                // a jump instruction just moves (jumps) the program
+                //  counter to the specified address
+                self.program_counter = instruction.addresses;
+                jump_occurred = true;
+            },
+            .JZ => {
+                // the JZ instruction only jump is the zero flag is set.
+                if (self.FLAG_Z == 0) {
+                    self.program_counter = instruction.addresses;
+                    jump_occurred = true;
+                }
+            },
+            .JNZ => {
+                // JNZ instruction jumps when zero flag is not set
+                if (self.FLAG_Z != 0) {
+                    self.program_counter = instruction.addresses;
+                    jump_occurred = true;
+                }
+            },
             .Hlt => {
                 self.is_halted = 1;
             },
             _ => CpuError.InvalidInstruction,
-        };
+        }
+
+        return jump_occurred;
     }
 
     // helper method to make sure we don't read outside of memory boundary.
@@ -139,7 +169,7 @@ pub const Cpu = struct {
         const reg = self.memory.read_32_bytes(self.program_counter + offset);
 
         // 15 is the number of registers my cpu has.
-        if (reg > 15) {
+        if (reg > MAX_REGISTERS_COUNT) {
             return CpuError.InvalidRegister;
         }
 
@@ -187,4 +217,16 @@ test "decode: returns the instruction related to the read bytes" {
     const hlt = try cpu.decode(0x01);
     try std.testing.expectEqual(hlt.opcode, Opcode.Hlt);
     try std.testing.expectEqual(hlt.length, 4);
+
+    const jmp = try cpu.decode(0x40);
+    try std.testing.expectEqual(jmp.opcode, Opcode.JMP);
+    try std.testing.expectEqual(jmp.length, 8);
+
+    const jz = try cpu.decode(0x41);
+    try std.testing.expectEqual(jz.opcode, Opcode.JZ);
+    try std.testing.expectEqual(jz.length, 8);
+
+    const jnz = try cpu.decode(0x42);
+    try std.testing.expectEqual(jnz.opcode, Opcode.JNZ);
+    try std.testing.expectEqual(jnz.length, 8);
 }
