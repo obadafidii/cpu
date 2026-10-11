@@ -15,7 +15,7 @@ const Opcode = @import("opcode.zig").Opcode;
 // The immediate is added for immediate instruction type I-Type
 // eg ADDI, SUBI, where we are reading the value from register
 // instead of memory.
-pub const Instruction = struct {
+pub const Instruction = packed struct {
     // operation to be performed.
     opcode: Opcode,
 

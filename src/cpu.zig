@@ -1,40 +1,133 @@
 const std = @import("std");
 
 const memory = @import("memory.zig");
-const instruction_mod = @import("instruction.zig");
 const opcode_mod = @import("opcode.zig");
+const Instruction = @import("instruction.zig").Instruction;
 
+// opcodes
 const Opcode = opcode_mod.Opcode;
+
 const hexToOpcode = opcode_mod.hexToOpcode;
-const Instruction = instruction_mod.Instruction;
-const _64KiB_Memory = memory.Memory(65535); // 64 kibi byte memory = 64 * 1024 * 1024
+
+// memroy: 64 kibi byte memory = 64 * 1024 * 1024
+const _64KiB_Memory = memory.Memory(memory.MEMORY_SIZE);
+
+// layout of the computer memory.
+const MemoryMap = memory.MemoryMap;
 
 pub const CpuError = error{ InvalidInstruction, InvalidRegister, InvalidMemoryRead };
 
 pub const Cpu = struct {
     const Self = @This();
 
+    // tracks the currently executing instruction
     program_counter: u32,
+
     stack_pointer: u32,
-    flags: u8,
+    flags: FLAGS,
+
+    // tracks if the cpu is still running.
     is_halted: u8,
 
+    // Registers are the storage locations inside
+    // the processor (cpu) they're very small
+    // but extremely fast for processing. If the
+    // needed value or instruction is in the register
+    // we don't need to go to memory because that is costly
+    // but if we need too, we use the Load/Store concept
+    //
+    // Conceptual Overview:
+    // From: Memory -> Registers => Load
+    // From: Registers -> Memory => Store
     registers: [16]u32,
-    memory: _64KiB_Memory,
 
-    const MAX_REGISTERS_COUNT: i8 = 15;
-    const FLAG_Z: i8 = 1 << 0;
-    const FLAG_C: i8 = 1 << 1;
-    const FLAG_N: i8 = 1 << 2;
+    // Represents the main memory of the machine
+    // it exposes APIs to load/store bits
+    main_memory: _64KiB_Memory,
+
+    const FLAGS = struct {
+        const InnerSelf = @This();
+
+        // zero flag
+        Z: i8,
+        // carry flag
+        C: i8,
+        // negative flag
+        N: i8,
+
+        pub fn set_z(self: InnerSelf, value: i8) void {
+            self.Z = value;
+        }
+
+        pub fn set_x(self: InnerSelf, value: i8) void {
+            self.X = value;
+        }
+
+        pub fn set_N(self: InnerSelf, value: i8) void {
+            self.N = value;
+        }
+
+        pub fn zero_flag_is_set(self: InnerSelf) bool {
+            return self.Z == 0;
+        }
+
+        pub fn carry_flag_is_set(self: InnerSelf) bool {
+            return self.Z == 0;
+        }
+
+        pub fn default() FLAGS {
+            return .{
+                .Z = 1 << 0,
+                .C = 1 << 1,
+                .N = 1 << 2,
+            };
+        }
+    };
+
+    // total number of registers supported by this CPU
+    const MAX_REGISTERS_COUNT: i8 = 16;
+
+    pub fn simulate(self: *Self) !void {
+        const rom = [_]u32{
+            // load 3 into R0
+            0x10, // load
+            0x00, // R0
+            3, // immediate value(3)
+
+            // load 5 into R1
+            0x10, // load opcode
+            0x01, // R1
+            0x05, // immediate value(5)
+
+            // add R0, R1 and store in R0
+            0x30, // add opcode
+            0x00, // R0
+            0x01, // R1
+
+            // stop the cpu
+            0x01, // halt opcode
+        };
+
+        std.debug.print("registers before program: {any}\n", .{self.registers});
+
+        var word_location: u16 = MemoryMap.ROM_START;
+        for (rom) |value| {
+            self.main_memory.write_32_bits(word_location, value);
+            word_location += 4;
+        }
+        try self.start();
+        std.debug.print("\nregisters after program: {any}\n", .{self.registers});
+        // std.debug.print("\nmain memory = {any}\n", .{self.main_memory.space});
+    }
 
     pub fn init() !Cpu {
         return .{
             .program_counter = 0,
-            .memory = try _64KiB_Memory.init(),
+            .main_memory = try _64KiB_Memory.init(),
             .stack_pointer = 0,
             .is_halted = 0,
-            .registers = [_]u32{0} ** 16,
-            .flags = 0,
+            .registers = [_]u32{0} ** MAX_REGISTERS_COUNT,
+            .flags = FLAGS.default(),
         };
     }
 
@@ -49,13 +142,18 @@ pub const Cpu = struct {
         while (self.is_halted != 1) {
             const binary: u8 = @intCast(self.fetch());
             const decoded_instruction: Instruction = try self.decode(binary);
-            try self.execute(decoded_instruction);
-            self._move_to_next_instruction(decoded_instruction);
+            const jumped = try self.execute(decoded_instruction);
+
+            // we only move to the next instruction when the instruction
+            // does not perform an a jump.
+            if (!jumped) {
+                self._move_to_next_instruction(decoded_instruction);
+            }
         }
     }
 
     fn fetch(self: *Self) u32 {
-        return self.memory.read_32_bytes(self.program_counter);
+        return self.main_memory.read_32_bits(self.program_counter);
     }
 
     // decode: takes the binary read from memory and 'parse' and detects
@@ -69,7 +167,7 @@ pub const Cpu = struct {
                 // +----------+--------+----------+
                 // |   ADD    |   R1   |   R2     |
                 // +----------+--------+----------+
-                // PC         4bytes   4bytes
+                // PC           4bytes    4bytes
                 //
                 // So from PC the way I can access R2 is to add 8bytes and 4bytes for R1
                 var instruction: Instruction = Instruction.init(op);
@@ -97,6 +195,7 @@ pub const Cpu = struct {
                 halt_instr.length = 4; // the halt opcode
                 return halt_instr;
             },
+            // [jump-instruction] <address>
             .JMP, .JZ, .JNZ => |op| {
                 var jump_instrcution = Instruction.init(op);
                 jump_instrcution.length = 8;
@@ -109,7 +208,7 @@ pub const Cpu = struct {
     fn execute(self: *Self, instruction: Instruction) !bool {
         var jump_occurred: bool = false;
 
-        switch (instruction.opcode) {
+        try switch (instruction.opcode) {
             .Load => {
                 // load immediate to register1
                 self.registers[instruction.register1] = instruction.immediate;
@@ -137,20 +236,20 @@ pub const Cpu = struct {
             },
             .JMP => {
                 // a jump instruction just moves (jumps) the program
-                //  counter to the specified address
+                // counter to the specified address
                 self.program_counter = instruction.addresses;
                 jump_occurred = true;
             },
             .JZ => {
                 // the JZ instruction only jump is the zero flag is set.
-                if (self.FLAG_Z == 0) {
+                if (self.flags.zero_flag_is_set()) {
                     self.program_counter = instruction.addresses;
                     jump_occurred = true;
                 }
             },
             .JNZ => {
                 // JNZ instruction jumps when zero flag is not set
-                if (self.FLAG_Z != 0) {
+                if (self.flags.zero_flag_is_set()) {
                     self.program_counter = instruction.addresses;
                     jump_occurred = true;
                 }
@@ -159,14 +258,14 @@ pub const Cpu = struct {
                 self.is_halted = 1;
             },
             _ => CpuError.InvalidInstruction,
-        }
+        };
 
         return jump_occurred;
     }
 
     // helper method to make sure we don't read outside of memory boundary.
     fn _safely_read_register_at_offset(self: *const Self, offset: u16) CpuError!u32 {
-        const reg = self.memory.read_32_bytes(self.program_counter + offset);
+        const reg = self.main_memory.read_32_bits(self.program_counter + offset);
 
         // 15 is the number of registers my cpu has.
         if (reg > MAX_REGISTERS_COUNT) {

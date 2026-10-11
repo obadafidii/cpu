@@ -1,11 +1,6 @@
-const std = @import("std");
-const cpu_mod = @import("src/cpu.zig");
+const Cpu = @import("src/cpu.zig").Cpu;
 
-const Cpu = cpu_mod.Cpu;
-const CpuError = cpu_mod.CpuError;
-
-pub fn main(_: std.process.Init) !void {
+pub fn main() !void {
     var cpu = try Cpu.init();
-    std.debug.print("is_halted: {}", .{cpu.is_halted});
-    try cpu.start();
+    try cpu.simulate();
 }

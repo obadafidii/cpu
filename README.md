@@ -25,6 +25,7 @@ Right now, I just adding resources I found online to build this emulator. Right 
 
 ## Courses I took
 1. [Prof Onur Mutlu's Digital design course: start from here to *](https://www.youtube.com/live/fOl5MLoUzco?si=FS_GGDM2-3RuTIyQ)
+2. [CSC61C; Studied for memory and registers understanding](https://notes.cs61c.org/content/rv-intro/rv-arithmetic/)
 
 ## People notes
 1. [Kareem's post](https://www.linkedin.com/posts/kareem-abo-gazala-b64974316_riscabrv-operatingsystems-systemsprogramming-share-7381363006196232192-R-ku/)
