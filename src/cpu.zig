@@ -152,6 +152,8 @@ pub const Cpu = struct {
         }
     }
 
+    // Fetch: read instructions in bytes from main memory
+    // it reads 4 memory cells at once which means it returns 32 bits.
     fn fetch(self: *Self) u32 {
         return self.main_memory.read_32_bits(self.program_counter);
     }
