@@ -28,18 +28,16 @@ pub const Instruction = packed struct {
     // ADD r1, r2 -> r2 is source
     register2: u32,
 
-    // used for jumps and memory operations
-    addresses: u16,
-
     // for immediate values
     immediate: u32,
+
+    // used for jumps and memory operations
+    addresses: u16,
 
     // size of the instruction, it is used to move
     // to the beginning of the next instruction using
     // the current's instruction length.
     length: u8,
-
-    const Self = @This();
 
     pub fn init(opcode: Opcode) Instruction {
         return .{
