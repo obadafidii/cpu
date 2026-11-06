@@ -100,7 +100,7 @@ h2 { font-size: 15px; font-weight: 600; margin: 0; letter-spacing: .01em; }
 
 .speed { display: flex; align-items: center; gap: 8px; color: var(--ink-2); font-size: 14px; margin-left: 4px; }
 .speed input { width: 90px; accent-color: var(--blue); }
-.speed output { font: 500 13px var(--mono); color: var(--ink); min-width: 36px; }
+.speed output { font-size: 14px; font-weight: 500; color: var(--ink); min-width: 48px; }
 
 /* ---------------------------------------------------------------- layout */
 .workbench {
@@ -189,8 +189,10 @@ h2 { font-size: 15px; font-weight: 600; margin: 0; letter-spacing: .01em; }
 .stage {
   position: relative; border: var(--line) dashed var(--pencil); border-radius: var(--r);
   padding: 10px 10px 12px; min-height: 96px; display: flex; flex-direction: column; gap: 6px;
-  transition: border-color .15s, background-color .15s;
+  transition: border-color .2s, background-color .2s;
 }
+.stage.lit .stage-body { animation: stage-in .22s ease-out; }
+@keyframes stage-in { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
 /* the wire between two stages */
 .stage + .stage::before {
   content: ""; position: absolute; left: -23px; top: 50%; width: 22px; height: 0;
