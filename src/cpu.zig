@@ -149,6 +149,8 @@ pub const Cpu = struct {
             if (!jumped) {
                 self._move_to_next_instruction(decoded_instruction);
             }
+
+            //TODO: work on jump instructions later. JZ, JNZ, JP
         }
     }
 
