@@ -4,8 +4,7 @@ a cpu emulator
 
 ## Motivation
 I was learning llvm so I took a break and went on twitter, while scrolling I saw this [guy](https://x.com/_bumblebee7_) speaking about the cpu emulator
-he built, while looking closely I even saw he is Nigerian and was like woah let me know him, I found out he was residing in the US
-(because I saw he did something with Apple and I was like how??? 😂). That aside, I was reading through his tweet and saw 
+he built, while looking closely I even saw he is Nigerian and was like woah let me know him. I was reading through his tweet and saw 
 ["...functional CPU emulator from scratch in c++"](https://x.com/_bumblebee7_/status/2099261230875554182), Immediately, I went to chatgpt
 too ask how it relates to what I am currently studying (as of writing this, I am studying computer architecture, compilers and databases)
 and it explained so well on how the emulator relates to these topics, so I decided to build one myself.
