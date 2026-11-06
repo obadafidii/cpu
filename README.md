@@ -9,8 +9,6 @@ he built, while looking closely I even saw he is Nigerian and was like woah let 
 too ask how it relates to what I am currently studying (as of writing this, I am studying computer architecture, compilers and databases)
 and it explained so well on how the emulator relates to these topics, so I decided to build one myself.
 
-Right now, I just adding resources I found online to build this emulator.
-
 ## Running it in the browser
 The emulator and the assembler compile to WebAssembly, and `web/` holds a small frontend for them
 (source editor, datapath, registers, memory, machine code listing, symbols and an execution trace).
