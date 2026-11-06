@@ -1,0 +1,5 @@
+.zig-toolchain
+.zig-cache
+zig-out
+.git
+research

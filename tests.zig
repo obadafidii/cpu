@@ -7,4 +7,6 @@ test {
     _ = @import("src/cpu.zig");
     _ = @import("src/instruction.zig");
     _ = @import("src/memory.zig");
+    _ = @import("src/assembler/assembler.zig");
+    _ = @import("src/assembler/symbol_table.zig");
 }

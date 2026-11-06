@@ -3,3 +3,6 @@ build
 cmake-build-debug
 .zig-cache
 .zig-out
+zig-out
+.zig-toolchain
+.vercel

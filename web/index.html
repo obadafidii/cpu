@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KCPU Workbench</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <svg class="chip" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2"/><path d="M9 2v3M12 2v3M15 2v3M9 19v3M12 19v3M15 19v3M2 9h3M2 12h3M2 15h3M19 9h3M19 12h3M19 15h3"/></svg>
+      <span class="brand-name">KCPU</span>
+      <span class="brand-sub">32-bit emulator, running in WebAssembly</span>
+    </div>
+
+    <div class="controls" role="toolbar" aria-label="Execution controls">
+      <label class="select">
+        <span class="visually-hidden">Example program</span>
+        <select id="examples"></select>
+      </label>
+      <span class="divider" aria-hidden="true"></span>
+      <button id="btn-step" class="btn" title="Run one instruction (F10)">Step</button>
+      <button id="btn-run" class="btn btn-primary" title="Run until HLT or a breakpoint (F8)">Run</button>
+      <button id="btn-reset" class="btn" title="Reload the program and clear the machine">Reset</button>
+      <label class="speed" title="Instructions per second">
+        <span>Speed</span>
+        <input id="speed" type="range" min="0" max="5" step="1" value="2">
+        <output id="speed-out">4/s</output>
+      </label>
+    </div>
+  </header>
+
+  <main class="workbench">
+    <!-- left: source -->
+    <section class="panel panel-source" aria-labelledby="h-source">
+      <div class="panel-head">
+        <h2 id="h-source">Source</h2>
+        <span id="asm-state" class="hint">Assembles as you type</span>
+      </div>
+      <div class="editor" id="editor">
+        <div class="gutter" id="gutter" aria-label="Line numbers, click to toggle a breakpoint"></div>
+        <div class="code">
+          <pre class="hl" id="hl" aria-hidden="true"></pre>
+          <textarea id="source" spellcheck="false" autocomplete="off" autocapitalize="off" wrap="off" aria-label="Assembly source"></textarea>
+        </div>
+      </div>
+      <div class="status" id="status" role="status" aria-live="polite"></div>
+    </section>
+
+    <!-- right: machine -->
+    <div class="machine">
+      <section class="panel panel-datapath" aria-labelledby="h-datapath">
+        <div class="panel-head">
+          <h2 id="h-datapath">Datapath</h2>
+          <span class="hint" id="cycle-count">0 instructions executed</span>
+        </div>
+        <ol class="pipeline" id="pipeline">
+          <li class="stage" data-stage="pc">
+            <span class="stage-name">PC</span>
+            <span class="stage-body" id="st-pc">0x0000</span>
+          </li>
+          <li class="stage" data-stage="fetch">
+            <span class="stage-name">Fetch</span>
+            <span class="stage-body" id="st-fetch">Waiting for the first step</span>
+          </li>
+          <li class="stage" data-stage="decode">
+            <span class="stage-name">Decode</span>
+            <span class="stage-body" id="st-decode"></span>
+          </li>
+          <li class="stage" data-stage="execute">
+            <span class="stage-name">Execute</span>
+            <span class="stage-body" id="st-execute"></span>
+          </li>
+          <li class="stage" data-stage="write">
+            <span class="stage-name">Write back</span>
+            <span class="stage-body" id="st-write"></span>
+          </li>
+        </ol>
+        <p class="next-line">Next: <code id="next-instr">nothing loaded</code></p>
+      </section>
+
+      <section class="panel panel-regs" aria-labelledby="h-regs">
+        <div class="panel-head">
+          <h2 id="h-regs">Registers</h2>
+          <div class="seg" role="group" aria-label="Number format">
+            <button class="seg-btn is-on" data-fmt="hex" aria-pressed="true">Hex</button>
+            <button class="seg-btn" data-fmt="dec" aria-pressed="false">Dec</button>
+            <button class="seg-btn" data-fmt="sdec" aria-pressed="false">Signed</button>
+          </div>
+        </div>
+        <div class="regs" id="regs"></div>
+        <div class="special">
+          <div class="sreg"><span class="sreg-name">PC</span><span class="sreg-val" id="r-pc">0x00000000</span></div>
+          <div class="sreg"><span class="sreg-name">SP</span><span class="sreg-val" id="r-sp">0x00000000</span></div>
+          <div class="flags" aria-label="Flags">
+            <span class="flag" id="f-z" title="Zero: the last result was 0">Z</span>
+            <span class="flag" id="f-c" title="Carry: the last ADD carried out of bit 31, or the last SUB borrowed">C</span>
+            <span class="flag" id="f-n" title="Negative: bit 31 of the last result was set">N</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel panel-mem" aria-labelledby="h-mem">
+        <div class="panel-head">
+          <h2 id="h-mem">Memory</h2>
+          <label class="check"><input type="checkbox" id="follow" checked> Follow PC</label>
+        </div>
+        <div class="memmap" id="memmap">
+          <button class="mm-seg mm-rom" data-addr="0x0000" style="flex-grow:4" title="ROM, 0x0000 to 0x0FFF. Your instructions live here.">
+            <span class="mm-fill" id="mm-text"></span><span class="mm-pc" id="mm-pc"></span>
+          </button>
+          <button class="mm-seg mm-ram" data-addr="0x1000" style="flex-grow:56" title="RAM, 0x1000 to 0xEFFF. The .data section starts here.">
+            <span class="mm-fill" id="mm-data"></span>
+          </button>
+          <button class="mm-seg mm-stack" data-addr="0xF000" style="flex-grow:4" title="Stack, 0xF000 to 0xFFFF"></button>
+        </div>
+        <div class="memmap-labels" aria-hidden="true">
+          <span style="flex-grow:4">ROM 4K</span><span style="flex-grow:56">RAM 56K</span><span style="flex-grow:4">Stack 4K</span>
+        </div>
+        <div class="memnav">
+          <button class="btn btn-small" id="mem-prev" aria-label="Previous 256 bytes">Prev</button>
+          <label class="goto"><span>Address</span><input id="mem-addr" value="0x0000" inputmode="text" aria-label="Go to address"></label>
+          <button class="btn btn-small" id="mem-next" aria-label="Next 256 bytes">Next</button>
+        </div>
+        <div class="hexdump" id="hexdump" role="table" aria-label="Memory contents"></div>
+      </section>
+
+      <section class="panel panel-listing" aria-labelledby="h-listing">
+        <div class="tabs" role="tablist">
+          <button class="tab is-on" role="tab" aria-selected="true" data-tab="listing" id="h-listing">Machine code</button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="symbols">Symbols</button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="trace">Trace</button>
+        </div>
+        <div class="tabpane" id="pane-listing"></div>
+        <div class="tabpane" id="pane-symbols" hidden></div>
+        <div class="tabpane" id="pane-trace" hidden></div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

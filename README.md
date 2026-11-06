@@ -11,6 +11,40 @@ and it explained so well on how the emulator relates to these topics, so I decid
 
 Right now, I just adding resources I found online to build this emulator. Right now I am building it with zig not sure yet.
 
+## Running it in the browser
+The emulator and the assembler compile to WebAssembly, and `web/` holds a small frontend for them
+(source editor, datapath, registers, memory, machine code listing, symbols and an execution trace).
+
+```sh
+zig build web                              # builds cpu.wasm and copies web/ into zig-out/web
+python3 -m http.server -d zig-out/web 8000 # any static server works, file:// does not
+```
+
+Then open http://localhost:8000. Shortcuts: `F10` step, `F8` run or pause. Click a line number to set a breakpoint.
+
+## Assembler
+`src/assembler/assembler.zig` turns assembly text into the word stream the CPU decodes (every field is one
+32-bit little-endian word, so `LOAD R0, 3` is `0x10 0x00 0x03`).
+
+```asm
+; comments start with ; or //
+.data                 ; variables, placed in RAM from 0x1000
+count:  .word 42      ; also .byte .half .dword .ascii .asciiz .space
+name:   .asciiz "KCPU"
+age:    10            ; shorthand for .word 10
+
+.text                 ; instructions, placed in ROM from 0x0000
+start:
+    LOAD R1, 0x2A     ; LD and LDI work too, numbers can be decimal, 0x, 0b, 0o, 'c' or negative
+    LOAD R2, count    ; a variable name becomes its address
+    MOV  R3, R1
+    ADD  R3, R2
+    SUB  R3, R1
+    HLT
+```
+
+Jump instructions (JMP, JZ, JNZ) are recognised but the assembler rejects them for now.
+
 ## Resources
 1. [Emulating a CPU in C++ by Dave Poo](https://www.youtube.com/watch?v=qJgsuQoy9bc)
 2. [32-bit CPU in C++](https://rohan-sharma.de/blog/32-bit-cpu/) -> David start here.
